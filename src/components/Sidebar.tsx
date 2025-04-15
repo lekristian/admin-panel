@@ -1,5 +1,6 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -10,8 +11,21 @@ import {
   LogOut
 } from 'lucide-react';
 import { Button } from './ui';
+import { useAuthStore } from '../store/auth';
+import { logoutUser } from '../api/auth';
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
+
+  const logoutMutation = useMutation({
+    mutationFn: logoutUser,
+    onSuccess: () => {
+      logout();
+      navigate('/login');
+    },
+  });
+
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Calendar, label: 'Reservations', path: '/reservations' },
@@ -49,6 +63,8 @@ const Sidebar = () => {
           variant="ghost"
           icon={LogOut}
           className="w-full justify-start text-gray-600 hover:text-red-600 hover:bg-red-50"
+          onClick={() => logoutMutation.mutate()}
+          loading={logoutMutation.isPending}
         >
           Logout
         </Button>

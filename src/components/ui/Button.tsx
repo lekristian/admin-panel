@@ -1,5 +1,6 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -8,6 +9,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
   loading?: boolean;
+  as?: typeof Link;
+  to?: string;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -22,6 +25,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       loading = false,
       className = '',
       disabled,
+      as: Component = 'button',
+      to,
       ...props
     },
     ref
@@ -44,20 +49,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const disabledStyles = disabled || loading ? 'opacity-50 cursor-not-allowed' : '';
     const widthStyles = fullWidth ? 'w-full' : '';
 
-    return (
-      <button
-        ref={ref}
-        disabled={disabled || loading}
-        className={`
-          ${baseStyles}
-          ${variants[variant]}
-          ${sizes[size]}
-          ${widthStyles}
-          ${disabledStyles}
-          ${className}
-        `}
-        {...props}
-      >
+    const styles = `
+      ${baseStyles}
+      ${variants[variant]}
+      ${sizes[size]}
+      ${widthStyles}
+      ${disabledStyles}
+      ${className}
+    `;
+
+    const content = (
+      <>
         {loading ? (
           <>
             <svg
@@ -89,6 +91,25 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             {Icon && iconPosition === 'right' && <Icon className="w-4 h-4 ml-2" />}
           </>
         )}
+      </>
+    );
+
+    if (Component === Link && to) {
+      return (
+        <Link to={to} className={styles}>
+          {content}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        ref={ref}
+        disabled={disabled || loading}
+        className={styles}
+        {...props}
+      >
+        {content}
       </button>
     );
   }

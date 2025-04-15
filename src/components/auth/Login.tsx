@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/auth';
+import { loginUser } from '../../api/auth';
 import { Car } from 'lucide-react';
 import { Card, CardHeader, CardContent, CardFooter, Input, Button } from '../ui';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
+  const loginMutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      login(data);
+      navigate('/');
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      await login(email, password);
-      navigate('/');
-    } catch (err) {
-      setError('Invalid email or password');
-    } finally {
-      setLoading(false);
-    }
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -38,9 +38,9 @@ const Login = () => {
         </CardHeader>
         
         <CardContent>
-          {error && (
+          {loginMutation.isError && (
             <div className="bg-red-50 text-red-700 p-3 rounded-md mb-6">
-              {error}
+              Invalid email or password
             </div>
           )}
 
@@ -65,7 +65,7 @@ const Login = () => {
               type="submit"
               variant="primary"
               fullWidth
-              loading={loading}
+              loading={loginMutation.isPending}
             >
               Sign in
             </Button>

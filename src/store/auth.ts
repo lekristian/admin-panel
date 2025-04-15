@@ -11,7 +11,7 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (user: User) => void;
   register: (email: string, password: string, companyName: string) => Promise<void>;
   logout: () => void;
 }
@@ -21,15 +21,8 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      login: async (email: string, password: string) => {
-        // TODO: Implement actual authentication
-        const mockUser = {
-          id: '1',
-          email,
-          companyName: 'Test Company',
-          subscription: null,
-        };
-        set({ user: mockUser, isAuthenticated: true });
+      login: (user: User) => {
+        set({ user, isAuthenticated: true });
       },
       register: async (email: string, password: string, companyName: string) => {
         // TODO: Implement actual registration

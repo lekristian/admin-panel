@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/auth';
+import { registerUser } from '../../api/auth';
 import { Car } from 'lucide-react';
 import { Card, CardHeader, CardContent, CardFooter, Input, Button } from '../ui';
 
@@ -8,22 +10,20 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
+
+  const registerMutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: (data) => {
+      login(data);
+      navigate('/subscription');
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      await register(email, password, companyName);
-      navigate('/subscription');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    registerMutation.mutate({ email, password, companyName });
   };
 
   return (
@@ -39,9 +39,9 @@ const Register = () => {
         </CardHeader>
         
         <CardContent>
-          {error && (
+          {registerMutation.isError && (
             <div className="bg-red-50 text-red-700 p-3 rounded-md mb-6">
-              {error}
+              Registration failed. Please try again.
             </div>
           )}
 
@@ -74,7 +74,7 @@ const Register = () => {
               type="submit"
               variant="primary"
               fullWidth
-              loading={loading}
+              loading={registerMutation.isPending}
             >
               Create account
             </Button>

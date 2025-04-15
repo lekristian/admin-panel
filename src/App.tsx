@@ -1,37 +1,56 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashboard';
-import Reservations from './components/Reservations';
-import Services from './components/Services';
-import Payments from './components/Payments';
-import CustomFields from './components/CustomFields';
-import Settings from './components/Settings';
-import Login from './components/auth/Login';
-import Register from './components/auth/Register';
-import Subscription from './components/subscription/Subscription';
-import { useAuthStore } from './store/auth';
-import { useSubscriptionStore } from './store/subscription';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import Dashboard from "./components/Dashboard";
+import Reservations from "./components/Reservations";
+import Services from "./components/Services";
+import Payments from "./components/Payments";
+import CustomFields from "./components/CustomFields";
+import Settings from "./components/Settings";
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import Subscription from "./components/subscription/Subscription";
+import { useAuthStore } from "./store/auth";
+import { useSubscriptionStore } from "./store/subscription";
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const currentPlan = useSubscriptionStore((state) => state.currentPlan);
 
   // Protected route wrapper
-  const ProtectedRoute = ({ children, requireSubscription = true }: { 
+  const ProtectedRoute = ({
+    children,
+    requireSubscription = true,
+  }: {
     children: React.ReactNode;
     requireSubscription?: boolean;
   }) => {
     if (!isAuthenticated) {
       return <Navigate to="/login" />;
     }
-    
+
     // Only check for subscription if required and user is not on subscription-related pages
-    if (requireSubscription && !currentPlan && 
-        !window.location.pathname.includes('/subscription')) {
+    if (
+      requireSubscription &&
+      !currentPlan &&
+      !window.location.pathname.includes("/subscription")
+    ) {
       return <Navigate to="/subscription" />;
     }
-    
+
+    return <>{children}</>;
+  };
+
+  // Auth route wrapper - redirects to dashboard if already authenticated
+  const AuthRoute = ({ children }: { children: React.ReactNode }) => {
+    if (isAuthenticated) {
+      return <Navigate to="/" />;
+    }
     return <>{children}</>;
   };
 
@@ -57,17 +76,21 @@ function App() {
         <Route
           path="/login"
           element={
-            <AuthLayout>
-              <Login />
-            </AuthLayout>
+            <AuthRoute>
+              <AuthLayout>
+                <Login />
+              </AuthLayout>
+            </AuthRoute>
           }
         />
         <Route
           path="/register"
           element={
-            <AuthLayout>
-              <Register />
-            </AuthLayout>
+            <AuthRoute>
+              <AuthLayout>
+                <Register />
+              </AuthLayout>
+            </AuthRoute>
           }
         />
         <Route
