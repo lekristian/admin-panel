@@ -6,10 +6,10 @@ import {
   Settings, 
   CreditCard, 
   Package, 
-  Users,
   FormInput,
   LogOut
 } from 'lucide-react';
+import { Button } from './ui';
 
 const Sidebar = () => {
   const menuItems = [
@@ -45,10 +45,13 @@ const Sidebar = () => {
         ))}
       </nav>
       <div className="absolute bottom-0 w-full p-4 border-t">
-        <button className="flex items-center text-gray-600 hover:text-red-600 transition-colors">
-          <LogOut className="w-5 h-5 mr-3" />
-          <span>Logout</span>
-        </button>
+        <Button
+          variant="ghost"
+          icon={LogOut}
+          className="w-full justify-start text-gray-600 hover:text-red-600 hover:bg-red-50"
+        >
+          Logout
+        </Button>
       </div>
     </div>
   );

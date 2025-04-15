@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { CreditCard, DollarSign, Settings } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
+import { Card, CardHeader, CardContent, Input, Button } from './ui';
 
 interface PaymentMethod {
   id: string;
@@ -41,10 +42,16 @@ const PaymentMethodForm = ({
   onSave: (method: PaymentMethod) => void;
 }) => {
   const [formData, setFormData] = useState(method);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    setLoading(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,33 +72,31 @@ const PaymentMethodForm = ({
           </label>
         </div>
       </div>
+
       {formData.enabled && (
         <div className="space-y-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">API Key</label>
-            <input
-              type="password"
-              value={formData.apiKey}
-              onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Webhook Secret</label>
-            <input
-              type="password"
-              value={formData.webhookSecret}
-              onChange={(e) => setFormData({ ...formData, webhookSecret: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+          <Input
+            label="API Key"
+            type="password"
+            value={formData.apiKey}
+            onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+          />
+
+          <Input
+            label="Webhook Secret"
+            type="password"
+            value={formData.webhookSecret}
+            onChange={(e) => setFormData({ ...formData, webhookSecret: e.target.value })}
+          />
+
           <div className="pt-4">
-            <button
+            <Button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              variant="primary"
+              loading={loading}
             >
               Save Changes
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -118,16 +123,20 @@ const Payments = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-6">Payment Methods</h2>
-          <div className="space-y-6">
-            {paymentMethods.map((method) => (
-              <div key={method.id} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
-                <PaymentMethodForm method={method} onSave={handleSaveMethod} />
-              </div>
-            ))}
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold">Payment Methods</h2>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {paymentMethods.map((method) => (
+                <div key={method.id} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
+                  <PaymentMethodForm method={method} onSave={handleSaveMethod} />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

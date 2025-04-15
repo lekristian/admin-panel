@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Package, Plus, Edit2, Trash2, Clock, DollarSign } from 'lucide-react';
 import type { Service } from '../types';
+import { Card, CardHeader, CardContent, Button, Input } from './ui';
 
 const initialServices: Service[] = [
   {
@@ -41,25 +42,28 @@ const ServiceForm = ({
     duration: initialData?.duration || 30,
     price: initialData?.price || 0
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Service Name</label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          required
-        />
-      </div>
-      <div>
+      <Input
+        label="Service Name"
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        required
+      />
+      
+      <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700">Description</label>
         <textarea
           value={formData.description}
@@ -69,45 +73,43 @@ const ServiceForm = ({
           required
         />
       </div>
+
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
-          <input
-            type="number"
-            value={formData.duration}
-            onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            min="1"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Price ($)</label>
-          <input
-            type="number"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            min="0"
-            step="0.01"
-            required
-          />
-        </div>
+        <Input
+          label="Duration (minutes)"
+          type="number"
+          value={formData.duration}
+          onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+          min="1"
+          required
+        />
+        
+        <Input
+          label="Price ($)"
+          type="number"
+          value={formData.price}
+          onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+          min="0"
+          step="0.01"
+          required
+        />
       </div>
+
       <div className="flex justify-end space-x-3 pt-4">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          variant="primary"
+          loading={loading}
         >
           {initialData ? 'Update Service' : 'Add Service'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -150,66 +152,73 @@ const Services = () => {
           <Package className="w-6 h-6 mr-2 text-blue-500" />
           <h1 className="text-2xl font-bold">Services</h1>
         </div>
-        <button
+        <Button
           onClick={() => {
             setEditingService(null);
             setShowForm(true);
           }}
-          className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          variant="primary"
+          icon={Plus}
         >
-          <Plus className="w-4 h-4 mr-2" />
           Add Service
-        </button>
+        </Button>
       </div>
 
       {(showForm || editingService) && (
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">
-            {editingService ? 'Edit Service' : 'Add New Service'}
-          </h2>
-          <ServiceForm
-            onSubmit={editingService ? handleEditService : handleAddService}
-            initialData={editingService}
-            onCancel={() => {
-              setShowForm(false);
-              setEditingService(null);
-            }}
-          />
-        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <h2 className="text-lg font-semibold">
+              {editingService ? 'Edit Service' : 'Add New Service'}
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <ServiceForm
+              onSubmit={editingService ? handleEditService : handleAddService}
+              initialData={editingService}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingService(null);
+              }}
+            />
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {services.map((service) => (
-          <div key={service.id} className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold">{service.name}</h3>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setEditingService(service)}
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteService(service.id)}
-                  className="text-gray-600 hover:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+          <Card key={service.id}>
+            <CardContent>
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold">{service.name}</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => setEditingService(service)}
+                    variant="ghost"
+                    size="sm"
+                    icon={Edit2}
+                  />
+                  <Button
+                    onClick={() => handleDeleteService(service.id)}
+                    variant="ghost"
+                    size="sm"
+                    icon={Trash2}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  />
+                </div>
               </div>
-            </div>
-            <p className="text-gray-600 mb-4">{service.description}</p>
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <div className="flex items-center">
-                <Clock className="w-4 h-4 mr-1" />
-                <span>{service.duration} min</span>
+              <p className="text-gray-600 mb-4">{service.description}</p>
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex items-center">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <span>{service.duration} min</span>
+                </div>
+                <div className="flex items-center">
+                  <DollarSign className="w-4 h-4 mr-1" />
+                  <span>${service.price.toFixed(2)}</span>
+                </div>
               </div>
-              <div className="flex items-center">
-                <DollarSign className="w-4 h-4 mr-1" />
-                <span>${service.price.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

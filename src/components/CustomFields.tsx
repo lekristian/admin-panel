@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FormInput, Plus, Edit2, Trash2 } from 'lucide-react';
 import type { CustomField } from '../types';
+import { Card, CardHeader, CardContent, Button, Input, Select } from './ui';
 
 const initialFields: CustomField[] = [
   {
@@ -37,38 +38,42 @@ const FieldForm = ({
     type: initialData?.type || 'text',
     required: initialData?.required || false
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const fieldTypes = [
+    { value: 'text', label: 'Text' },
+    { value: 'number', label: 'Number' },
+    { value: 'email', label: 'Email' },
+    { value: 'phone', label: 'Phone' },
+    { value: 'date', label: 'Date' }
+  ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Field Label</label>
-        <input
-          type="text"
-          value={formData.label}
-          onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Field Type</label>
-        <select
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value as CustomField['type'] })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="text">Text</option>
-          <option value="number">Number</option>
-          <option value="email">Email</option>
-          <option value="phone">Phone</option>
-          <option value="date">Date</option>
-        </select>
-      </div>
+      <Input
+        label="Field Label"
+        value={formData.label}
+        onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+        required
+      />
+
+      <Select
+        label="Field Type"
+        value={formData.type}
+        onChange={(e) => setFormData({ ...formData, type: e.target.value as CustomField['type'] })}
+        options={fieldTypes}
+      />
+
       <div className="flex items-center">
         <input
           type="checkbox"
@@ -81,20 +86,22 @@ const FieldForm = ({
           Required field
         </label>
       </div>
+
       <div className="flex justify-end space-x-3 pt-4">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          variant="primary"
+          loading={loading}
         >
           {initialData ? 'Update Field' : 'Add Field'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -137,65 +144,72 @@ const CustomFields = () => {
           <FormInput className="w-6 h-6 mr-2 text-blue-500" />
           <h1 className="text-2xl font-bold">Custom Fields</h1>
         </div>
-        <button
+        <Button
           onClick={() => {
             setEditingField(null);
             setShowForm(true);
           }}
-          className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          variant="primary"
+          icon={Plus}
         >
-          <Plus className="w-4 h-4 mr-2" />
           Add Field
-        </button>
+        </Button>
       </div>
 
       {(showForm || editingField) && (
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">
-            {editingField ? 'Edit Custom Field' : 'Add New Custom Field'}
-          </h2>
-          <FieldForm
-            onSubmit={editingField ? handleEditField : handleAddField}
-            initialData={editingField}
-            onCancel={() => {
-              setShowForm(false);
-              setEditingField(null);
-            }}
-          />
-        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <h2 className="text-lg font-semibold">
+              {editingField ? 'Edit Custom Field' : 'Add New Custom Field'}
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <FieldForm
+              onSubmit={editingField ? handleEditField : handleAddField}
+              initialData={editingField}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingField(null);
+              }}
+            />
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {fields.map((field) => (
-          <div key={field.id} className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold">{field.label}</h3>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setEditingField(field)}
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteField(field.id)}
-                  className="text-gray-600 hover:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+          <Card key={field.id}>
+            <CardContent>
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold">{field.label}</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => setEditingField(field)}
+                    variant="ghost"
+                    size="sm"
+                    icon={Edit2}
+                  />
+                  <Button
+                    onClick={() => handleDeleteField(field.id)}
+                    variant="ghost"
+                    size="sm"
+                    icon={Trash2}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center text-sm text-gray-500">
-                <span className="font-medium mr-2">Type:</span>
-                <span className="capitalize">{field.type}</span>
+              <div className="space-y-2">
+                <div className="flex items-center text-sm text-gray-500">
+                  <span className="font-medium mr-2">Type:</span>
+                  <span className="capitalize">{field.type}</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <span className="font-medium mr-2">Required:</span>
+                  <span>{field.required ? 'Yes' : 'No'}</span>
+                </div>
               </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <span className="font-medium mr-2">Required:</span>
-                <span>{field.required ? 'Yes' : 'No'}</span>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>
